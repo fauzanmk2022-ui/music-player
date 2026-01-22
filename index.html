@@ -3,61 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ultimate Music Player v3.7</title>
+    <title>Ultimate Music Player v3.8</title>
     <style>
         :root { --spotify-green: #1db954; --bg-dark: #121212; --card-bg: #1e1e1e; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         
-        .player-card { background-color: var(--card-bg); padding: 1.5rem; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; position: relative; z-index: 1; }
-        #thumbnail { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 15px; margin-bottom: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.5); transition: 0.3s; }
-        .info h2 { margin: 0; font-size: 1rem; height: 2.4em; overflow: hidden; color: #fff; }
+        .player-card { background-color: var(--card-bg); padding: 1.5rem; border-radius: 25px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
         
-        /* Volume Control Style */
-        .volume-wrapper { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 0 10px; }
-        .volume-wrapper span { font-size: 1.2rem; min-width: 25px; }
-        #volume-slider { flex: 1; accent-color: var(--spotify-green); cursor: pointer; height: 4px; }
-
-        .progress-wrapper { margin: 10px 0; }
+        #thumbnail { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; margin-bottom: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        .info h2 { margin: 0; font-size: 1.1rem; height: 2.4em; overflow: hidden; color: #fff; line-height: 1.2; }
+        
+        /* Progress Bar */
+        .progress-wrapper { margin: 20px 0 10px 0; }
         .progress-container { width: 100%; height: 5px; background: #444; border-radius: 5px; cursor: pointer; }
         #progress-bar { width: 0%; height: 100%; background: var(--spotify-green); border-radius: 5px; }
-        .time-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #b3b3b3; margin-top: 5px; }
+        .time-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #b3b3b3; margin-top: 8px; }
         
-        .controls { display: flex; justify-content: space-between; align-items: center; }
-        button { background: none; border: none; color: #b3b3b3; font-size: 1.2rem; padding: 10px; cursor: pointer; }
+        /* Main Controls */
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .controls button { background: none; border: none; color: #b3b3b3; font-size: 1.3rem; padding: 10px; cursor: pointer; transition: 0.2s; }
+        .controls button:active { transform: scale(0.9); }
+        #play-btn { font-size: 3rem !important; color: white; }
         .active { color: var(--spotify-green) !important; }
-        #play-btn { font-size: 2.5rem; color: white; }
+
+        /* Bottom Navigation Area (Sesuai Permintaan Gambar) */
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px 5px; border-top: 1px solid #333; }
+        
+        /* Tombol Perpustakaan (Kiri) */
+        #btn-playlist { background: rgba(255,255,255,0.05); color: var(--spotify-green); border: 1px solid var(--spotify-green); padding: 8px 15px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+        /* Kontrol Volume (Kanan) */
+        .volume-control { display: flex; align-items: center; gap: 8px; width: 40%; }
+        #volume-slider { flex: 1; accent-color: var(--spotify-green); height: 4px; cursor: pointer; }
+        #volume-icon { font-size: 1rem; color: #b3b3b3; }
 
         /* Playlist Panel */
         #playlist-panel {
             position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%;
-            background: #181818; border-radius: 25px 25px 0 0; z-index: 10;
-            transition: bottom 0.4s ease; padding: 20px; box-sizing: border-box;
+            background: #181818; border-radius: 25px 25px 0 0; z-index: 100;
+            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box;
             display: flex; flex-direction: column;
         }
         #playlist-panel.open { bottom: 0; }
-        .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .search-box { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #282828; color: white; margin-bottom: 10px; box-sizing: border-box; outline: none; }
         
-        .search-box { width: 100%; padding: 8px; border-radius: 5px; border: none; background: #333; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        
-        .filter-tags { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; scrollbar-width: none; }
-        .filter-tags::-webkit-scrollbar { display: none; }
-        .tag { padding: 5px 12px; background: #333; border-radius: 15px; font-size: 0.7rem; cursor: pointer; white-space: nowrap; }
-        .tag.active { background: var(--spotify-green); color: white; }
-
-        .form-group { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
-        .add-song-form { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
-        .add-song-form input, .add-song-form select, .cat-input-group input { padding: 8px; border-radius: 5px; border: none; background: #333; color: white; font-size: 0.8rem; }
-        .btn-green { background: var(--spotify-green); color: white; border-radius: 5px; padding: 5px 12px; font-size: 0.8rem; }
+        .filter-tags { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none; }
+        .tag { padding: 6px 15px; background: #282828; border-radius: 20px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
+        .tag.active { background: var(--spotify-green); color: white; border-color: var(--spotify-green); }
 
         .playlist-content { flex: 1; overflow-y: auto; text-align: left; }
-        .playlist-item { display: flex; align-items: center; padding: 10px; border-radius: 10px; margin-bottom: 5px; background: rgba(255,255,255,0.03); cursor: pointer; }
-        .playlist-item.playing { color: var(--spotify-green); background: rgba(29,185,84,0.1); }
-        .playlist-item img { width: 40px; height: 40px; border-radius: 5px; margin-right: 12px; }
+        .playlist-item { display: flex; align-items: center; padding: 12px; border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.03); cursor: pointer; }
+        .playlist-item.playing { border-left: 4px solid var(--spotify-green); background: rgba(29,185,84,0.1); }
+        .playlist-item img { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; }
 
-        .io-buttons { display: flex; gap: 5px; margin-top: 10px; }
-        .io-buttons button { font-size: 0.6rem; background: #333; padding: 5px; flex: 1; border-radius: 5px; color: #ccc; }
+        .form-group { background: #222; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
+        .add-song-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+        .add-song-form input, .add-song-form select, .cat-input-group input { padding: 10px; border-radius: 8px; border: none; background: #333; color: white; font-size: 0.85rem; }
+        .btn-green { background: var(--spotify-green); color: white; border-radius: 8px; border:none; padding: 10px 15px; font-weight: bold; }
 
-        #btn-playlist { margin-top: 10px; font-size: 0.8rem; color: var(--spotify-green); font-weight: bold; border: 1px solid var(--spotify-green); border-radius: 20px; width: 100%; padding: 8px; }
+        .io-buttons { display: flex; gap: 8px; margin-top: 15px; }
+        .io-buttons button { font-size: 0.7rem; background: #282828; padding: 10px; flex: 1; border-radius: 10px; color: #fff; border: 1px solid #444; }
+
         #youtube-audio-player { position: absolute; top: -999px; }
     </style>
 </head>
@@ -65,13 +73,8 @@
 
     <div class="player-card">
         <img id="thumbnail" src="https://via.placeholder.com/300" alt="Thumbnail">
-        <div class="info"><h2 id="song-title">Menghubungkan...</h2></div>
+        <div class="info"><h2 id="song-title">Memuat...</h2></div>
         
-        <div class="volume-wrapper">
-            <span id="volume-icon">🔊</span>
-            <input type="range" id="volume-slider" min="0" max="100" value="100" oninput="setVolume(this.value)">
-        </div>
-
         <div class="progress-wrapper">
             <div class="progress-container" onclick="seek(event)"><div id="progress-bar"></div></div>
             <div class="time-info"><span id="current-time">0:00</span><span id="total-duration">0:00</span></div>
@@ -84,38 +87,48 @@
             <button onclick="nextVideo()">⏭</button>
             <button onclick="cycleRepeat()" id="repeat-btn">🔁</button>
         </div>
-        <button id="btn-playlist" onclick="togglePlaylist()">MENU PERPUSTAKAAN</button>
+
+        <div class="bottom-nav">
+            <button id="btn-playlist" onclick="togglePlaylist()">
+                <span>☰</span> PERPUSTAKAAN
+            </button>
+            
+            <div class="volume-control">
+                <span id="volume-icon">🔊</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="100" oninput="setVolume(this.value)">
+            </div>
+        </div>
     </div>
 
     <div id="playlist-panel">
         <div class="playlist-header">
-            <h3>Library & Kategori</h3>
-            <button onclick="togglePlaylist()" style="font-size: 1.2rem; color: white;">✕</button>
+            <h3>Library Musik</h3>
+            <button onclick="togglePlaylist()" style="background:none; border:none; font-size: 1.5rem; color: white;">✕</button>
         </div>
 
-        <input type="text" id="search-input" class="search-box" placeholder="Cari judul lagu..." onkeyup="renderPlaylist()">
+        <input type="text" id="search-input" class="search-box" placeholder="Cari lagu..." onkeyup="renderPlaylist()">
         
         <div class="filter-tags" id="category-filter-list"></div>
 
         <div class="form-group">
             <div class="add-song-form">
-                <input type="text" id="youtube-url" placeholder="Link YouTube">
+                <input type="text" id="youtube-url" placeholder="Paste Link YouTube">
                 <button onclick="addNewSong()" class="btn-green">+</button>
                 <select id="song-category-select"></select>
             </div>
         </div>
 
-        <div class="form-group cat-input-group" style="display:flex; gap:5px;">
-            <input type="text" id="new-category-name" placeholder="Nama Kategori Baru..." style="flex:1">
-            <button onclick="addNewCategory()" class="btn-green">Buat Kategori</button>
+        <div class="form-group cat-input-group" style="display:flex; gap:8px;">
+            <input type="text" id="new-category-name" placeholder="Kategori Baru..." style="flex:1">
+            <button onclick="addNewCategory()" class="btn-green">Buat</button>
         </div>
 
         <div class="playlist-content" id="playlist-list"></div>
 
         <div class="io-buttons">
-            <button onclick="exportData()">Export</button>
-            <button onclick="importData()">Import</button>
-            <button onclick="clearPlaylist()" style="color:#ff4444">Reset All</button>
+            <button onclick="exportData()">EXPORT</button>
+            <button onclick="importData()">IMPORT</button>
+            <button onclick="clearPlaylist()" style="background:#441111;">RESET</button>
         </div>
     </div>
 
@@ -125,38 +138,32 @@
     <script>
         let rawPlaylist = JSON.parse(localStorage.getItem('myMusicV3')) || [];
         let myCategories = JSON.parse(localStorage.getItem('myCategoriesV3')) || ['Semua', 'Pop', 'Rock', 'Jazz', 'Relax'];
-        let currentVolume = localStorage.getItem('playerVolume') || 100;
-        
+        let currentVolume = localStorage.getItem('playerVolume') || 80;
         let currentTrackIndex = 0, player, currentCategory = 'Semua';
 
         function onYouTubeIframeAPIReady() {
             if(rawPlaylist.length === 0) {
-                rawPlaylist.push({id: 'e65d09CKXQc', title: 'Contoh Lagu', category: 'Pop'});
+                rawPlaylist.push({id: 'e65d09CKXQc', title: 'Welcome to Your Player', category: 'Pop'});
             }
             player = new YT.Player('youtube-audio-player', {
                 height: '0', width: '0', videoId: rawPlaylist[currentTrackIndex].id,
-                playerVars: { 'origin': window.location.origin, 'enablejsapi': 1 },
+                playerVars: { 'origin': window.location.origin, 'enablejsapi': 1, 'autoplay': 0 },
                 events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
 
         function onPlayerReady() { 
-            renderCategories();
-            renderPlaylist(); 
-            updateUI();
-            setVolume(currentVolume); // Terapkan volume terakhir
+            renderCategories(); renderPlaylist(); updateUI();
+            setVolume(currentVolume);
             document.getElementById('volume-slider').value = currentVolume;
             setInterval(updateProgress, 1000); 
         }
 
-        // FUNGSI BARU: Pengatur Volume
         function setVolume(val) {
             if (player && player.setVolume) {
                 player.setVolume(val);
                 currentVolume = val;
                 localStorage.setItem('playerVolume', val);
-                
-                // Update Ikon Volume
                 const icon = document.getElementById('volume-icon');
                 if (val == 0) icon.innerText = "🔇";
                 else if (val < 50) icon.innerText = "🔉";
@@ -182,34 +189,23 @@
             });
         }
 
-        function addNewCategory() {
-            const input = document.getElementById('new-category-name');
-            const name = input.value.trim();
-            if(name && !myCategories.includes(name)) {
-                myCategories.push(name);
-                localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
-                input.value = ''; renderCategories();
-            }
-        }
-
         function renderPlaylist() {
             const listContainer = document.getElementById('playlist-list');
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             listContainer.innerHTML = '';
             rawPlaylist.forEach((song, index) => {
-                const matchSearch = song.title.toLowerCase().includes(searchTerm);
-                const matchCategory = (currentCategory === 'Semua' || song.category === currentCategory);
-                if (matchSearch && matchCategory) {
+                if ((currentCategory === 'Semua' || song.category === currentCategory) && 
+                    song.title.toLowerCase().includes(searchTerm)) {
                     const item = document.createElement('div');
                     item.className = `playlist-item ${index === currentTrackIndex ? 'playing' : ''}`;
                     item.onclick = () => playTrack(index);
                     item.innerHTML = `
                         <img src="https://img.youtube.com/vi/${song.id}/default.jpg">
-                        <div style="flex:1; font-size:0.75rem">
+                        <div style="flex:1; font-size:0.8rem">
                             <strong>${song.title}</strong><br>
-                            <small style="color:var(--spotify-green)">${song.category || 'Pop'}</small>
+                            <small style="color:#888">${song.category || 'Pop'}</small>
                         </div>
-                        <button onclick="removeSong(event, ${index})" style="color:#ff4444; font-size:1.2rem">×</button>
+                        <button onclick="removeSong(event, ${index})" style="color:#ff4444; background:none; border:none; font-size:1.2rem">✕</button>
                     `;
                     listContainer.appendChild(item);
                 }
@@ -219,47 +215,22 @@
         function playTrack(idx) { 
             currentTrackIndex = idx; 
             player.loadVideoById(rawPlaylist[idx].id); 
-            updateUI(); 
-            player.playVideo(); 
+            updateUI(); player.playVideo(); 
         }
 
-        function addNewSong() {
-            const urlInput = document.getElementById('youtube-url');
-            const catInput = document.getElementById('song-category-select');
-            const videoId = extractID(urlInput.value);
-            if (videoId) {
-                rawPlaylist.push({id: videoId, title: 'Memuat...', category: catInput.value});
-                saveData(); renderPlaylist(); urlInput.value = '';
-            }
-        }
-
-        function extractID(url) {
-            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        function saveData() { localStorage.setItem('myMusicV3', JSON.stringify(rawPlaylist)); }
-        function removeSong(e, idx) { e.stopPropagation(); rawPlaylist.splice(idx, 1); saveData(); renderPlaylist(); }
-        function clearPlaylist() { if(confirm("Hapus semua data?")) { localStorage.clear(); location.reload(); } }
-        
         function onPlayerStateChange(e) {
             if (e.data === YT.PlayerState.PLAYING) {
-                document.getElementById('play-btn').innerText = "⏸️";
-                const title = player.getVideoData().title;
-                document.getElementById('song-title').innerText = title;
-                player.setVolume(currentVolume); // Pastikan volume tetap terjaga saat lagu baru mulai
+                document.getElementById('play-btn').innerText = "⏸";
+                document.getElementById('song-title').innerText = player.getVideoData().title;
                 updateUI();
                 if(rawPlaylist[currentTrackIndex].title === "Memuat...") {
-                    rawPlaylist[currentTrackIndex].title = title; saveData(); renderPlaylist();
+                    rawPlaylist[currentTrackIndex].title = player.getVideoData().title;
+                    saveData(); renderPlaylist();
                 }
-            } else { document.getElementById('play-btn').innerText = "▶️"; }
+            } else { document.getElementById('play-btn').innerText = "▶"; }
             if (e.data === YT.PlayerState.ENDED) nextVideo();
         }
 
-        function playPause() { player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
-        function nextVideo() { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; playTrack(currentTrackIndex); }
-        function prevVideo() { currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length; playTrack(currentTrackIndex); }
-        
         function updateUI() { 
             const song = rawPlaylist[currentTrackIndex];
             if(song) {
@@ -269,31 +240,48 @@
         }
 
         function updateProgress() {
-            if (player && player.getCurrentTime) {
+            if (player && player.getDuration) {
                 const cur = player.getCurrentTime(), dur = player.getDuration();
                 document.getElementById('current-time').innerText = formatTime(cur);
                 document.getElementById('total-duration').innerText = formatTime(dur);
                 if (dur > 0) document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
             }
         }
+
         function formatTime(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
         function seek(e) { const p = e.offsetX / e.currentTarget.offsetWidth; player.seekTo(player.getDuration() * p); }
+        function nextVideo() { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; playTrack(currentTrackIndex); }
+        function prevVideo() { currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length; playTrack(currentTrackIndex); }
+        function playPause() { player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
         function togglePlaylist() { document.getElementById('playlist-panel').classList.toggle('open'); }
-        
-        function exportData() {
-            const backup = { playlist: rawPlaylist, categories: myCategories };
-            prompt("Salin kode backup ini:", btoa(JSON.stringify(backup)));
+        function addNewCategory() {
+            const val = document.getElementById('new-category-name').value.trim();
+            if(val && !myCategories.includes(val)) {
+                myCategories.push(val);
+                localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
+                document.getElementById('new-category-name').value = ''; renderCategories();
+            }
         }
-
+        function addNewSong() {
+            const url = document.getElementById('youtube-url').value;
+            const cat = document.getElementById('song-category-select').value;
+            const id = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+            if(id) {
+                rawPlaylist.push({id: id[1], title: 'Memuat...', category: cat});
+                saveData(); renderPlaylist(); document.getElementById('youtube-url').value = '';
+            }
+        }
+        function saveData() { localStorage.setItem('myMusicV3', JSON.stringify(rawPlaylist)); }
+        function removeSong(e, idx) { e.stopPropagation(); rawPlaylist.splice(idx, 1); saveData(); renderPlaylist(); }
+        function clearPlaylist() { if(confirm("Hapus semua data?")) { localStorage.clear(); location.reload(); } }
+        function exportData() { prompt("Backup Code:", btoa(JSON.stringify({p:rawPlaylist, c:myCategories}))); }
         function importData() {
-            const code = prompt("Tempel kode backup:");
+            const code = prompt("Paste Backup Code:");
             if(code) {
-                try {
-                    const decoded = JSON.parse(atob(code));
-                    rawPlaylist = decoded.playlist; myCategories = decoded.categories;
-                    saveData(); localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
-                    location.reload();
-                } catch(e) { alert("Kode salah!"); }
+                const d = JSON.parse(atob(code));
+                rawPlaylist = d.p; myCategories = d.c;
+                saveData(); localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
+                location.reload();
             }
         }
     </script>
