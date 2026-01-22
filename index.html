@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pro Music Player</title>
+    <title>Pro Music Player v2</title>
     <style>
         :root { --spotify-green: #1db954; --bg-dark: #121212; --card-bg: #1e1e1e; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
@@ -12,36 +12,34 @@
         #thumbnail { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 15px; margin-bottom: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .info h2 { margin: 0; font-size: 1rem; height: 2.4em; overflow: hidden; color: #fff; }
         
-        /* Progress & Time */
         .progress-wrapper { margin: 15px 0; }
         .progress-container { width: 100%; height: 5px; background: #444; border-radius: 5px; cursor: pointer; }
         #progress-bar { width: 0%; height: 100%; background: var(--spotify-green); border-radius: 5px; }
         .time-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #b3b3b3; margin-top: 5px; }
         
-        /* Controls */
         .controls { display: flex; justify-content: space-between; align-items: center; }
-        button { background: none; border: none; color: #b3b3b3; font-size: 1.2rem; padding: 10px; cursor: pointer; transition: 0.3s; }
+        button { background: none; border: none; color: #b3b3b3; font-size: 1.2rem; padding: 10px; cursor: pointer; }
         .active { color: var(--spotify-green) !important; }
         #play-btn { font-size: 2.5rem; color: white; }
 
-        /* Playlist Menu Style */
+        /* Playlist Panel */
         #playlist-panel {
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 70%;
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 80%;
             background: #181818; border-radius: 25px 25px 0 0; z-index: 10;
             transition: bottom 0.4s ease; padding: 20px; box-sizing: border-box;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
         }
         #playlist-panel.open { bottom: 0; }
-        .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .playlist-content { height: 85%; overflow-y: auto; text-align: left; }
-        .playlist-item { 
-            display: flex; align-items: center; padding: 10px; border-radius: 10px; 
-            margin-bottom: 5px; cursor: pointer; transition: 0.2s;
-        }
-        .playlist-item:hover { background: #282828; }
+        .playlist-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .playlist-content { height: 70%; overflow-y: auto; text-align: left; margin-top: 10px; }
+        
+        /* Input Form */
+        .add-song-form { display: flex; gap: 5px; margin-bottom: 15px; }
+        .add-song-form input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; font-size: 0.8rem; }
+        .add-song-form button { background: var(--spotify-green); color: white; padding: 5px 15px; border-radius: 5px; font-size: 0.8rem; }
+
+        .playlist-item { display: flex; align-items: center; padding: 10px; border-radius: 10px; margin-bottom: 5px; }
         .playlist-item.playing { color: var(--spotify-green); background: rgba(29,185,84,0.1); }
         .playlist-item img { width: 40px; height: 40px; border-radius: 5px; margin-right: 15px; }
-        .playlist-item-info { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         #btn-playlist { margin-top: 10px; font-size: 0.9rem; color: var(--spotify-green); font-weight: bold; }
         #youtube-audio-player { position: absolute; top: -999px; }
@@ -66,7 +64,7 @@
             <button onclick="cycleRepeat()" id="repeat-btn">🔁</button>
         </div>
 
-        <button id="btn-playlist" onclick="togglePlaylist()">🎶 DAFTAR PUTAR</button>
+        <button id="btn-playlist" onclick="togglePlaylist()">🎶 DAFTAR PUTAR & TAMBAH LAGU</button>
     </div>
 
     <div id="playlist-panel">
@@ -74,46 +72,34 @@
             <h3>Daftar Putar</h3>
             <button onclick="togglePlaylist()" style="font-size: 1.5rem;">✕</button>
         </div>
+
+        <div class="add-song-form">
+            <input type="text" id="youtube-url" placeholder="Tempel link YouTube di sini...">
+            <button onclick="addNewSong()">Tambah</button>
+        </div>
+
         <div class="playlist-content" id="playlist-list"></div>
+        <button onclick="clearPlaylist()" style="color: #ff4444; font-size: 0.7rem; margin-top: 10px;">Reset Daftar Putar</button>
     </div>
 
     <div id="youtube-audio-player"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        const rawPlaylist = [
-            {id: 'e65d09CKXQc', title: 'Golden Voices - Classic'},
-            {id: 'Td2HcVu2hOQ', title: 'Romantic Hits'},
-            {id: 'xRloy66_ZYM', title: '90s Love Songs'},
-            {id: 'nx77P4iFDR8', title: 'Best of Pop'},
-            {id: 's7uJdo5rt5g', title: 'Acoustic Sessions'},
-            {id: 'ZQ8j2odyOEM', title: 'Relaxing Music'}
+        // Database awal (Default)
+        const defaultPlaylist = [
+            {id: 'e65d09CKXQc', title: 'Lagu Default 1'},
+            {id: 'Td2HcVu2hOQ', title: 'Lagu Default 2'}
         ];
 
+        // Ambil data dari LocalStorage jika ada, jika tidak pakai default
+        let rawPlaylist = JSON.parse(localStorage.getItem('myCustomPlaylist')) || defaultPlaylist;
         let currentTrackIndex = 0, player, isShuffle = false, repeatMode = 1;
-        let wakeLock = null;
-
-        // Fungsi untuk menjaga aplikasi tetap aktif di background
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock Aktif');
-                }
-            } catch (err) {
-                console.log('Wake Lock Gagal: ' + err.name);
-            }
-        }
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtube-audio-player', {
                 height: '0', width: '0', videoId: rawPlaylist[currentTrackIndex].id,
-                playerVars: { 
-                    'autoplay': 0, 
-                    'controls': 0, 
-                    'origin': window.location.origin, 
-                    'enablejsapi': 1 
-                },
+                playerVars: { 'autoplay': 0, 'controls': 0, 'origin': window.location.origin, 'enablejsapi': 1 },
                 events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
@@ -130,67 +116,78 @@
             rawPlaylist.forEach((song, index) => {
                 const item = document.createElement('div');
                 item.className = `playlist-item ${index === currentTrackIndex ? 'playing' : ''}`;
-                item.onclick = () => { playTrack(index); togglePlaylist(); };
+                item.onclick = () => { playTrack(index); };
                 item.innerHTML = `
                     <img src="https://img.youtube.com/vi/${song.id}/default.jpg">
-                    <div class="playlist-item-info">
-                        <strong>${song.title}</strong>
-                    </div>
+                    <div style="flex:1"><strong>${song.title}</strong></div>
+                    <button onclick="removeSong(event, ${index})" style="color:red; font-size:1rem">×</button>
                 `;
                 listContainer.appendChild(item);
             });
         }
 
-        function playTrack(index) {
-            currentTrackIndex = index;
-            loadTrack();
-            player.playVideo();
-        }
+        // FUNGSI BARU: Tambah Lagu via Link
+        function addNewSong() {
+            const urlInput = document.getElementById('youtube-url');
+            const url = urlInput.value;
+            const videoId = extractID(url);
 
-        function togglePlaylist() {
-            document.getElementById('playlist-panel').classList.toggle('open');
-        }
-
-        function onPlayerStateChange(e) {
-            const btn = document.getElementById('play-btn');
-            if (e.data === YT.PlayerState.PLAYING) { 
-                btn.innerText = "⏸️"; 
-                document.getElementById('song-title').innerText = player.getVideoData().title;
+            if (videoId) {
+                // Tambahkan ke array
+                rawPlaylist.push({id: videoId, title: 'Lagu Baru (Memuat...)'});
+                savePlaylist();
                 renderPlaylist();
-                requestWakeLock(); // Panggil Wake Lock saat mulai memutar
-            } else { 
-                btn.innerText = "▶️"; 
-                if (wakeLock !== null) {
-                    wakeLock.release().then(() => { wakeLock = null; });
-                }
+                urlInput.value = '';
+                alert("Lagu berhasil ditambahkan!");
+            } else {
+                alert("Link tidak valid!");
             }
+        }
+
+        function extractID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function savePlaylist() {
+            localStorage.setItem('myCustomPlaylist', JSON.stringify(rawPlaylist));
+        }
+
+        function removeSong(e, index) {
+            e.stopPropagation();
+            rawPlaylist.splice(index, 1);
+            savePlaylist();
+            renderPlaylist();
+        }
+
+        function clearPlaylist() {
+            if(confirm("Hapus semua lagu kustom?")) {
+                localStorage.removeItem('myCustomPlaylist');
+                location.reload();
+            }
+        }
+
+        // Fungsi player lainnya tetap sama
+        function playTrack(index) { currentTrackIndex = index; loadTrack(); player.playVideo(); }
+        function togglePlaylist() { document.getElementById('playlist-panel').classList.toggle('open'); }
+        function onPlayerStateChange(e) {
+            if (e.data === YT.PlayerState.PLAYING) { 
+                document.getElementById('play-btn').innerText = "⏸️"; 
+                document.getElementById('song-title').innerText = player.getVideoData().title;
+                // Update judul lagu di array jika sebelumnya masih "Memuat..."
+                if(rawPlaylist[currentTrackIndex].title.includes("Memuat")) {
+                    rawPlaylist[currentTrackIndex].title = player.getVideoData().title;
+                    savePlaylist();
+                    renderPlaylist();
+                }
+            } else { document.getElementById('play-btn').innerText = "▶️"; }
             if (e.data === YT.PlayerState.ENDED) { (repeatMode === 2) ? player.playVideo() : nextVideo(); }
         }
-
         function playPause() { player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
-
-        function nextVideo() {
-            if (isShuffle) { currentTrackIndex = Math.floor(Math.random() * rawPlaylist.length); }
-            else { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; }
-            loadTrack();
-        }
-
+        function nextVideo() { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; loadTrack(); }
         function prevVideo() { currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length; loadTrack(); }
-
-        function loadTrack() { 
-            player.loadVideoById(rawPlaylist[currentTrackIndex].id); 
-            updateUI(); 
-        }
-
-        function toggleShuffle() { isShuffle = !isShuffle; document.getElementById('shuffle-btn').classList.toggle('active', isShuffle); }
-
-        function cycleRepeat() {
-            repeatMode = (repeatMode + 1) % 3;
-            const btn = document.getElementById('repeat-btn');
-            btn.innerText = (repeatMode === 2) ? "🔂" : "🔁";
-            btn.className = (repeatMode === 0) ? "" : "active";
-        }
-
+        function loadTrack() { player.loadVideoById(rawPlaylist[currentTrackIndex].id); updateUI(); }
         function updateProgress() {
             if (player && player.getCurrentTime) {
                 const cur = player.getCurrentTime(), dur = player.getDuration();
@@ -199,10 +196,12 @@
                 if (dur > 0) document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
             }
         }
-
         function formatTime(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
         function seek(e) { const p = e.offsetX / e.currentTarget.offsetWidth; player.seekTo(player.getDuration() * p); }
-        function updateUI() { document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${rawPlaylist[currentTrackIndex].id}/hqdefault.jpg`; }
+        function updateUI() { 
+            document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${rawPlaylist[currentTrackIndex].id}/hqdefault.jpg`; 
+            renderPlaylist();
+        }
     </script>
 </body>
 </html>
