@@ -3,50 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ultimate Music Player v3.9</title>
+    <title>Ultimate Music Player v4.0</title>
     <style>
         :root { --spotify-green: #1db954; --bg-dark: #121212; --card-bg: #1e1e1e; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         
-        .player-card { background-color: var(--card-bg); padding: 1.5rem; border-radius: 25px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        
-        #thumbnail { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; margin-bottom: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transition: 0.3s; }
-        
-        .info h2 { margin: 0; font-size: 1.1rem; height: 2.4em; overflow: hidden; color: #fff; line-height: 1.2; }
-        
-        .progress-wrapper { margin: 20px 0 10px 0; }
+        .player-card { background-color: var(--card-bg); padding: 1.5rem; border-radius: 25px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; }
+        #thumbnail { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; margin-bottom: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .info h2 { margin: 10px 0; font-size: 1.1rem; height: 2.4em; overflow: hidden; }
+
+        /* Progress Bar */
+        .progress-wrapper { margin: 15px 0 10px 0; }
         .progress-container { width: 100%; height: 5px; background: #444; border-radius: 5px; cursor: pointer; }
         #progress-bar { width: 0%; height: 100%; background: var(--spotify-green); border-radius: 5px; }
-        .time-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #b3b3b3; margin-top: 8px; }
-        
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .controls button { background: none; border: none; color: #b3b3b3; font-size: 1.3rem; padding: 10px; cursor: pointer; transition: 0.2s; position: relative; }
-        .controls button:active { transform: scale(0.9); }
+        .time-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #b3b3b3; margin-top: 5px; }
+
+        /* Controls Tengah */
+        .controls { display: flex; justify-content: space-around; align-items: center; margin-bottom: 15px; }
+        .controls button { background: none; border: none; color: #b3b3b3; font-size: 1.3rem; cursor: pointer; position: relative; transition: 0.2s; }
         #play-btn { font-size: 3rem !important; color: white; }
-        
-        /* Indikator Tombol Aktif */
         .btn-active { color: var(--spotify-green) !important; }
-        .repeat-badge { position: absolute; top: 5px; right: 2px; font-size: 0.6rem; font-weight: bold; background: var(--spotify-green); color: black; padding: 1px 4px; border-radius: 50%; }
+        .badge { position: absolute; top: -2px; right: -5px; font-size: 0.6rem; background: var(--spotify-green); color: black; padding: 1px 4px; border-radius: 50%; font-weight: bold; }
 
-        .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px 5px; border-top: 1px solid #333; }
-        #btn-playlist { background: rgba(255,255,255,0.05); color: var(--spotify-green); border: 1px solid var(--spotify-green); padding: 8px 15px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-
-        .volume-control { display: flex; align-items: center; gap: 8px; width: 40%; }
+        /* Navigasi Bawah Sesuai Permintaan Anda */
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
+        #btn-playlist { background: none; border: 1px solid var(--spotify-green); color: var(--spotify-green); padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; width: 40%; }
+        .volume-box { display: flex; align-items: center; gap: 8px; width: 45%; }
         #volume-slider { flex: 1; accent-color: var(--spotify-green); height: 4px; cursor: pointer; }
-        #volume-icon { font-size: 1rem; color: #b3b3b3; }
 
+        /* Panel Playlist (Library & Kategori) */
         #playlist-panel {
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%;
-            background: #181818; border-radius: 25px 25px 0 0; z-index: 100;
-            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box;
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 90%;
+            background: #181818; border-radius: 25px 25px 0 0; z-index: 1000;
+            transition: bottom 0.4s ease; padding: 20px; box-sizing: border-box;
             display: flex; flex-direction: column;
         }
         #playlist-panel.open { bottom: 0; }
-        .search-box { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #282828; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        .playlist-content { flex: 1; overflow-y: auto; text-align: left; }
-        .playlist-item { display: flex; align-items: center; padding: 12px; border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.03); }
-        .playlist-item.playing { border-left: 4px solid var(--spotify-green); background: rgba(29,185,84,0.1); }
-        .playlist-item img { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .search-box { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #282828; color: white; margin-bottom: 10px; }
+        
+        /* Filter Kategori */
+        .filter-tags { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none; }
+        .tag { padding: 6px 14px; background: #333; border-radius: 20px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+        .tag.active { background: var(--spotify-green); color: white; }
+
+        /* Form Tambah */
+        .form-section { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .row { display: flex; gap: 8px; }
+        input, select { background: #333; border: none; color: white; padding: 8px; border-radius: 5px; font-size: 0.8rem; flex: 1; }
+        .btn-add { background: var(--spotify-green); border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        .playlist-content { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .song-item { display: flex; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 8px; }
+        .song-item.playing { border: 1px solid var(--spotify-green); background: rgba(29,185,84,0.1); }
+        .song-item img { width: 40px; height: 40px; border-radius: 5px; margin-right: 12px; }
 
         #youtube-audio-player { position: absolute; top: -999px; }
     </style>
@@ -54,8 +64,8 @@
 <body>
 
     <div class="player-card">
-        <img id="thumbnail" src="https://via.placeholder.com/300" alt="Thumbnail">
-        <div class="info"><h2 id="song-title">Memuat...</h2></div>
+        <img id="thumbnail" src="https://via.placeholder.com/300" alt="Cover">
+        <div class="info"><h2 id="song-title">Memuat Musik...</h2></div>
         
         <div class="progress-wrapper">
             <div class="progress-container" onclick="seek(event)"><div id="progress-bar"></div></div>
@@ -67,24 +77,40 @@
             <button onclick="prevVideo()">⏮</button>
             <button onclick="playPause()" id="play-btn">▶</button>
             <button onclick="nextVideo()">⏭</button>
-            <button onclick="toggleRepeat()" id="repeat-btn">🔁<span id="repeat-badge" class="repeat-badge" style="display:none">1</span></button>
+            <button onclick="toggleRepeat()" id="repeat-btn">🔁<span id="rep-badge" class="badge" style="display:none">1</span></button>
         </div>
 
         <div class="bottom-nav">
-            <button id="btn-playlist" onclick="togglePlaylist()">☰ PERPUSTAKAAN</button>
-            <div class="volume-control">
-                <span id="volume-icon">🔊</span>
-                <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)">
+            <button id="btn-playlist" onclick="togglePlaylist()">MENU PERPUSTAKAAN</button>
+            <div class="volume-box">
+                <span id="vol-icon">🔊</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="changeVolume(this.value)">
             </div>
         </div>
     </div>
 
     <div id="playlist-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3>Library Musik</h3>
-            <button onclick="togglePlaylist()" style="background:none; border:none; font-size:1.5rem; color:white;">✕</button>
+        <div class="panel-header">
+            <h3>Library & Kategori</h3>
+            <button onclick="togglePlaylist()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
         </div>
-        <input type="text" id="search-input" class="search-box" placeholder="Cari lagu..." onkeyup="renderPlaylist()">
+
+        <input type="text" id="search-input" class="search-box" placeholder="Cari judul lagu..." onkeyup="renderPlaylist()">
+        
+        <div class="filter-tags" id="cat-filters"></div>
+
+        <div class="form-section">
+            <div class="row">
+                <input type="text" id="yt-link" placeholder="Link YouTube">
+                <select id="cat-select"></select>
+                <button onclick="addSong()" class="btn-add">+</button>
+            </div>
+            <div class="row">
+                <input type="text" id="new-cat-name" placeholder="Nama Kategori Baru...">
+                <button onclick="addCategory()" class="btn-add">Buat Kategori</button>
+            </div>
+        </div>
+
         <div class="playlist-content" id="playlist-list"></div>
     </div>
 
@@ -92,123 +118,125 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        let rawPlaylist = JSON.parse(localStorage.getItem('myMusicV3')) || [{id: 'e65d09CKXQc', title: 'Welcome', category: 'Pop'}];
-        let currentTrackIndex = 0, player;
-        let isShuffle = false;
-        let repeatMode = 0; // 0: Off, 1: Repeat One, 2: Repeat All
+        let songs = JSON.parse(localStorage.getItem('songsV4')) || [{id:'e65d09CKXQc', title:'Contoh Lagu', cat:'Pop'}];
+        let cats = JSON.parse(localStorage.getItem('catsV4')) || ['Semua', 'Pop', 'Rock', 'Jazz', 'Relax'];
+        let curIdx = 0, player, isShuffle = false, repMode = 0, curCat = 'Semua';
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtube-audio-player', {
-                height: '0', width: '0', videoId: rawPlaylist[currentTrackIndex].id,
-                playerVars: { 'origin': window.location.origin, 'enablejsapi': 1 },
+                height: '0', width: '0', videoId: songs[curIdx].id,
                 events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
 
-        function onPlayerReady() { updateUI(); renderPlaylist(); setInterval(updateProgress, 1000); }
-
-        // FUNGSI SHUFFLE (MIX)
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            const btn = document.getElementById('shuffle-btn');
-            if (isShuffle) btn.classList.add('btn-active');
-            else btn.classList.remove('btn-active');
-        }
-
-        // FUNGSI REPEAT (3 Kondisi)
-        function toggleRepeat() {
-            repeatMode = (repeatMode + 1) % 3;
-            const btn = document.getElementById('repeat-btn');
-            const badge = document.getElementById('repeat-badge');
-
-            if (repeatMode === 0) { // Off
-                btn.classList.remove('btn-active');
-                badge.style.display = 'none';
-            } else if (repeatMode === 1) { // Repeat One
-                btn.classList.add('btn-active');
-                badge.style.display = 'inline-block';
-            } else if (repeatMode === 2) { // Repeat All
-                btn.classList.add('btn-active');
-                badge.style.display = 'none';
-            }
+        function onPlayerReady() { 
+            updateUI(); renderCats(); renderPlaylist();
+            player.setVolume(80);
         }
 
         function onPlayerStateChange(e) {
             if (e.data === YT.PlayerState.PLAYING) {
                 document.getElementById('play-btn').innerText = "⏸";
                 document.getElementById('song-title').innerText = player.getVideoData().title;
-                updateUI();
+                if(songs[curIdx].title === 'Memuat Musik...' || songs[curIdx].title === 'Contoh Lagu') {
+                    songs[curIdx].title = player.getVideoData().title; save(); renderPlaylist();
+                }
             } else { document.getElementById('play-btn').innerText = "▶"; }
+            if (e.data === YT.PlayerState.ENDED) autoNext();
+        }
 
-            if (e.data === YT.PlayerState.ENDED) {
-                handleAutoNext();
+        function autoNext() {
+            if (repMode === 1) player.playVideo();
+            else if (isShuffle) playTrack(Math.floor(Math.random() * songs.length));
+            else if (repMode === 2 || curIdx < songs.length - 1) nextVideo();
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffle-btn').classList.toggle('btn-active', isShuffle);
+        }
+
+        function toggleRepeat() {
+            repMode = (repMode + 1) % 3;
+            const btn = document.getElementById('repeat-btn');
+            const badge = document.getElementById('rep-badge');
+            btn.classList.toggle('btn-active', repMode > 0);
+            badge.style.display = (repMode === 1) ? 'inline' : 'none';
+        }
+
+        function renderCats() {
+            const container = document.getElementById('cat-filters');
+            const select = document.getElementById('cat-select');
+            container.innerHTML = ''; select.innerHTML = '';
+            cats.forEach(c => {
+                const t = document.createElement('div');
+                t.className = `tag ${curCat === c ? 'active' : ''}`;
+                t.innerText = c;
+                t.onclick = () => { curCat = c; renderCats(); renderPlaylist(); };
+                container.appendChild(t);
+                if(c !== 'Semua') {
+                    const opt = document.createElement('option');
+                    opt.value = c; opt.innerText = c;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function renderPlaylist() {
+            const list = document.getElementById('playlist-list');
+            const q = document.getElementById('search-input').value.toLowerCase();
+            list.innerHTML = '';
+            songs.forEach((s, i) => {
+                if((curCat==='Semua' || s.cat===curCat) && s.title.toLowerCase().includes(q)) {
+                    const div = document.createElement('div');
+                    div.className = `song-item ${i === curIdx ? 'playing' : ''}`;
+                    div.onclick = () => playTrack(i);
+                    div.innerHTML = `<img src="https://img.youtube.com/vi/${s.id}/default.jpg">
+                                    <div style="flex:1; font-size:0.8rem"><b>${s.title}</b><br><small>${s.cat}</small></div>
+                                    <button onclick="delSong(event,${i})" style="background:none; border:none; color:red;">✕</button>`;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        function addSong() {
+            const url = document.getElementById('yt-link').value;
+            const cat = document.getElementById('cat-select').value;
+            const id = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+            if(id) {
+                songs.push({id: id[1], title: 'Memuat Musik...', cat: cat});
+                save(); renderPlaylist(); document.getElementById('yt-link').value = '';
             }
         }
 
-        function handleAutoNext() {
-            if (repeatMode === 1) { // Repeat One
-                player.playVideo();
-            } else if (isShuffle) { // Shuffle Active
-                let nextIdx;
-                do { nextIdx = Math.floor(Math.random() * rawPlaylist.length); } 
-                while (nextIdx === currentTrackIndex && rawPlaylist.length > 1);
-                playTrack(nextIdx);
-            } else if (repeatMode === 2) { // Repeat All
-                nextVideo();
-            } else { // No Repeat
-                if (currentTrackIndex < rawPlaylist.length - 1) nextVideo();
+        function addCategory() {
+            const name = document.getElementById('new-cat-name').value.trim();
+            if(name && !cats.includes(name)) {
+                cats.push(name);
+                localStorage.setItem('catsV4', JSON.stringify(cats));
+                document.getElementById('new-cat-name').value = ''; renderCats();
             }
         }
 
-        function nextVideo() {
-            currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length;
-            playTrack(currentTrackIndex);
-        }
-
-        function prevVideo() {
-            currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length;
-            playTrack(currentTrackIndex);
-        }
-
-        function playTrack(idx) {
-            currentTrackIndex = idx;
-            player.loadVideoById(rawPlaylist[idx].id);
-            updateUI();
-            player.playVideo();
-        }
-
-        function updateUI() {
-            const song = rawPlaylist[currentTrackIndex];
-            if(song) {
-                document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${song.id}/hqdefault.jpg`;
-                renderPlaylist();
-            }
-        }
-
-        function setVolume(val) { if (player && player.setVolume) player.setVolume(val); }
+        function playTrack(i) { curIdx = i; player.loadVideoById(songs[i].id); updateUI(); player.playVideo(); }
+        function nextVideo() { curIdx = (curIdx + 1) % songs.length; playTrack(curIdx); }
+        function prevVideo() { curIdx = (curIdx - 1 + songs.length) % songs.length; playTrack(curIdx); }
         function playPause() { player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
-        function togglePlaylist() { document.getElementById('playlist-panel').classList.toggle('open'); }
-        function formatTime(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
-        function seek(e) { const p = e.offsetX / e.currentTarget.offsetWidth; player.seekTo(player.getDuration() * p); }
+        function changeVolume(v) { player.setVolume(v); document.getElementById('vol-icon').innerText = v==0?'🔇':v<50?'🔉':'🔊'; }
+        function updateUI() { document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${songs[curIdx].id}/hqdefault.jpg`; renderPlaylist(); }
+        function seek(e) { player.seekTo(player.getDuration() * (e.offsetX / e.currentTarget.offsetWidth)); }
         function updateProgress() {
-            if (player && player.getDuration) {
+            if (player && player.getCurrentTime) {
                 const cur = player.getCurrentTime(), dur = player.getDuration();
                 document.getElementById('current-time').innerText = formatTime(cur);
                 document.getElementById('total-duration').innerText = formatTime(dur);
-                if (dur > 0) document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
+                document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
             }
         }
-        function renderPlaylist() {
-            const listContainer = document.getElementById('playlist-list');
-            listContainer.innerHTML = '';
-            rawPlaylist.forEach((song, index) => {
-                const item = document.createElement('div');
-                item.className = `playlist-item ${index === currentTrackIndex ? 'playing' : ''}`;
-                item.onclick = () => playTrack(index);
-                item.innerHTML = `<img src="https://img.youtube.com/vi/${song.id}/default.jpg"><div><strong>${song.title}</strong></div>`;
-                listContainer.appendChild(item);
-            });
-        }
+        function formatTime(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
+        function togglePlaylist() { document.getElementById('playlist-panel').classList.toggle('open'); }
+        function save() { localStorage.setItem('songsV4', JSON.stringify(songs)); }
+        function delSong(e, i) { e.stopPropagation(); songs.splice(i, 1); save(); renderPlaylist(); }
     </script>
 </body>
 </html>
