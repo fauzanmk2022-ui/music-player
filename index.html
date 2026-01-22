@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pro Music Player v2</title>
+    <title>Ultimate Music Player</title>
     <style>
         :root { --spotify-green: #1db954; --bg-dark: #121212; --card-bg: #1e1e1e; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
@@ -24,24 +24,37 @@
 
         /* Playlist Panel */
         #playlist-panel {
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 80%;
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%;
             background: #181818; border-radius: 25px 25px 0 0; z-index: 10;
             transition: bottom 0.4s ease; padding: 20px; box-sizing: border-box;
+            display: flex; flex-direction: column;
         }
         #playlist-panel.open { bottom: 0; }
-        .playlist-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .playlist-content { height: 70%; overflow-y: auto; text-align: left; margin-top: 10px; }
+        .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        /* Input Form */
-        .add-song-form { display: flex; gap: 5px; margin-bottom: 15px; }
-        .add-song-form input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; font-size: 0.8rem; }
-        .add-song-form button { background: var(--spotify-green); color: white; padding: 5px 15px; border-radius: 5px; font-size: 0.8rem; }
+        .search-box { width: 100%; padding: 8px; border-radius: 5px; border: none; background: #333; color: white; margin-bottom: 10px; box-sizing: border-box; }
+        
+        /* Filter Kategori */
+        .filter-tags { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; scrollbar-width: none; }
+        .filter-tags::-webkit-scrollbar { display: none; }
+        .tag { padding: 5px 12px; background: #333; border-radius: 15px; font-size: 0.7rem; cursor: pointer; white-space: nowrap; }
+        .tag.active { background: var(--spotify-green); color: white; }
 
-        .playlist-item { display: flex; align-items: center; padding: 10px; border-radius: 10px; margin-bottom: 5px; }
+        /* Forms */
+        .form-group { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .add-song-form { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
+        .add-song-form input, .add-song-form select, .cat-input-group input { padding: 8px; border-radius: 5px; border: none; background: #333; color: white; font-size: 0.8rem; }
+        .btn-green { background: var(--spotify-green); color: white; border-radius: 5px; padding: 5px 12px; font-size: 0.8rem; }
+
+        .playlist-content { flex: 1; overflow-y: auto; text-align: left; }
+        .playlist-item { display: flex; align-items: center; padding: 10px; border-radius: 10px; margin-bottom: 5px; background: rgba(255,255,255,0.03); }
         .playlist-item.playing { color: var(--spotify-green); background: rgba(29,185,84,0.1); }
-        .playlist-item img { width: 40px; height: 40px; border-radius: 5px; margin-right: 15px; }
+        .playlist-item img { width: 40px; height: 40px; border-radius: 5px; margin-right: 12px; }
 
-        #btn-playlist { margin-top: 10px; font-size: 0.9rem; color: var(--spotify-green); font-weight: bold; }
+        .io-buttons { display: flex; gap: 5px; margin-top: 10px; }
+        .io-buttons button { font-size: 0.6rem; background: #333; padding: 5px; flex: 1; border-radius: 5px; color: #ccc; }
+
+        #btn-playlist { margin-top: 10px; font-size: 0.8rem; color: var(--spotify-green); font-weight: bold; border: 1px solid var(--spotify-green); border-radius: 20px; width: 100%; padding: 8px; }
         #youtube-audio-player { position: absolute; top: -999px; }
     </style>
 </head>
@@ -49,7 +62,7 @@
 
     <div class="player-card">
         <img id="thumbnail" src="https://via.placeholder.com/300" alt="Thumbnail">
-        <div class="info"><h2 id="song-title">Memuat Lagu...</h2></div>
+        <div class="info"><h2 id="song-title">Menghubungkan...</h2></div>
         
         <div class="progress-wrapper">
             <div class="progress-container" onclick="seek(event)"><div id="progress-bar"></div></div>
@@ -63,131 +76,192 @@
             <button onclick="nextVideo()">⏭</button>
             <button onclick="cycleRepeat()" id="repeat-btn">🔁</button>
         </div>
-
-        <button id="btn-playlist" onclick="togglePlaylist()">🎶 DAFTAR PUTAR & TAMBAH LAGU</button>
+        <button id="btn-playlist" onclick="togglePlaylist()">MENU PERPUSTAKAAN</button>
     </div>
 
     <div id="playlist-panel">
         <div class="playlist-header">
-            <h3>Daftar Putar</h3>
-            <button onclick="togglePlaylist()" style="font-size: 1.5rem;">✕</button>
+            <h3>Library & Kategori</h3>
+            <button onclick="togglePlaylist()" style="font-size: 1.2rem; color: white;">✕</button>
         </div>
 
-        <div class="add-song-form">
-            <input type="text" id="youtube-url" placeholder="Tempel link YouTube di sini...">
-            <button onclick="addNewSong()">Tambah</button>
+        <input type="text" id="search-input" class="search-box" placeholder="Cari judul lagu..." onkeyup="renderPlaylist()">
+        
+        <div class="filter-tags" id="category-filter-list">
+            </div>
+
+        <div class="form-group">
+            <div class="add-song-form">
+                <input type="text" id="youtube-url" placeholder="Link YouTube">
+                <button onclick="addNewSong()" class="btn-green">+</button>
+                <select id="song-category-select">
+                    </select>
+            </div>
+        </div>
+
+        <div class="form-group cat-input-group" style="display:flex; gap:5px;">
+            <input type="text" id="new-category-name" placeholder="Nama Kategori Baru..." style="flex:1">
+            <button onclick="addNewCategory()" class="btn-green">Buat Kategori</button>
         </div>
 
         <div class="playlist-content" id="playlist-list"></div>
-        <button onclick="clearPlaylist()" style="color: #ff4444; font-size: 0.7rem; margin-top: 10px;">Reset Daftar Putar</button>
+
+        <div class="io-buttons">
+            <button onclick="exportData()">Export</button>
+            <button onclick="importData()">Import</button>
+            <button onclick="clearPlaylist()" style="color:#ff4444">Reset All</button>
+        </div>
     </div>
 
     <div id="youtube-audio-player"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // Database awal (Default)
-        const defaultPlaylist = [
-            {id: 'e65d09CKXQc', title: 'Lagu Default 1'},
-            {id: 'Td2HcVu2hOQ', title: 'Lagu Default 2'}
-        ];
-
-        // Ambil data dari LocalStorage jika ada, jika tidak pakai default
-        let rawPlaylist = JSON.parse(localStorage.getItem('myCustomPlaylist')) || defaultPlaylist;
-        let currentTrackIndex = 0, player, isShuffle = false, repeatMode = 1;
+        // Kunci penyimpanan tetap sama agar data lama tidak hilang
+        let rawPlaylist = JSON.parse(localStorage.getItem('myMusicV3')) || [];
+        let myCategories = JSON.parse(localStorage.getItem('myCategoriesV3')) || ['Semua', 'Pop', 'Rock', 'Jazz', 'Relax'];
+        
+        let currentTrackIndex = 0, player, currentCategory = 'Semua';
 
         function onYouTubeIframeAPIReady() {
+            if(rawPlaylist.length === 0) {
+                rawPlaylist.push({id: 'e65d09CKXQc', title: 'Contoh Lagu', category: 'Pop'});
+            }
             player = new YT.Player('youtube-audio-player', {
                 height: '0', width: '0', videoId: rawPlaylist[currentTrackIndex].id,
-                playerVars: { 'autoplay': 0, 'controls': 0, 'origin': window.location.origin, 'enablejsapi': 1 },
+                playerVars: { 'origin': window.location.origin, 'enablejsapi': 1 },
                 events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
 
         function onPlayerReady() { 
             updateUI(); 
-            renderPlaylist();
+            renderCategories();
+            renderPlaylist(); 
             setInterval(updateProgress, 1000); 
+        }
+
+        // FUNGSI BARU: Merender Daftar Kategori & Dropdown
+        function renderCategories() {
+            const filterContainer = document.getElementById('category-filter-list');
+            const selectContainer = document.getElementById('song-category-select');
+            
+            filterContainer.innerHTML = '';
+            selectContainer.innerHTML = '';
+
+            myCategories.forEach(cat => {
+                // Render Filter Tag
+                const tag = document.createElement('div');
+                tag.className = `tag ${currentCategory === cat ? 'active' : ''}`;
+                tag.innerText = cat;
+                tag.onclick = () => { currentCategory = cat; renderCategories(); renderPlaylist(); };
+                filterContainer.appendChild(tag);
+
+                // Render Dropdown (Kecuali "Semua")
+                if(cat !== 'Semua') {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    selectContainer.appendChild(opt);
+                }
+            });
+        }
+
+        // FUNGSI BARU: Menambah Kategori Baru
+        function addNewCategory() {
+            const input = document.getElementById('new-category-name');
+            const name = input.value.trim();
+            if(name && !myCategories.includes(name)) {
+                myCategories.push(name);
+                localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
+                input.value = '';
+                renderCategories();
+                alert("Kategori '" + name + "' berhasil dibuat!");
+            }
         }
 
         function renderPlaylist() {
             const listContainer = document.getElementById('playlist-list');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
             listContainer.innerHTML = '';
+
             rawPlaylist.forEach((song, index) => {
-                const item = document.createElement('div');
-                item.className = `playlist-item ${index === currentTrackIndex ? 'playing' : ''}`;
-                item.onclick = () => { playTrack(index); };
-                item.innerHTML = `
-                    <img src="https://img.youtube.com/vi/${song.id}/default.jpg">
-                    <div style="flex:1"><strong>${song.title}</strong></div>
-                    <button onclick="removeSong(event, ${index})" style="color:red; font-size:1rem">×</button>
-                `;
-                listContainer.appendChild(item);
+                const matchSearch = song.title.toLowerCase().includes(searchTerm);
+                const matchCategory = (currentCategory === 'Semua' || song.category === currentCategory);
+
+                if (matchSearch && matchCategory) {
+                    const item = document.createElement('div');
+                    item.className = `playlist-item ${index === currentTrackIndex ? 'playing' : ''}`;
+                    item.onclick = () => playTrack(index);
+                    item.innerHTML = `
+                        <img src="https://img.youtube.com/vi/${song.id}/default.jpg">
+                        <div style="flex:1; font-size:0.75rem">
+                            <strong>${song.title}</strong><br>
+                            <small style="color:var(--spotify-green)">${song.category || 'Pop'}</small>
+                        </div>
+                        <button onclick="removeSong(event, ${index})" style="color:#ff4444; font-size:1.2rem">×</button>
+                    `;
+                    listContainer.appendChild(item);
+                }
             });
         }
 
-        // FUNGSI BARU: Tambah Lagu via Link
         function addNewSong() {
             const urlInput = document.getElementById('youtube-url');
-            const url = urlInput.value;
-            const videoId = extractID(url);
-
+            const catInput = document.getElementById('song-category-select');
+            const videoId = extractID(urlInput.value);
             if (videoId) {
-                // Tambahkan ke array
-                rawPlaylist.push({id: videoId, title: 'Lagu Baru (Memuat...)'});
-                savePlaylist();
-                renderPlaylist();
-                urlInput.value = '';
-                alert("Lagu berhasil ditambahkan!");
-            } else {
-                alert("Link tidak valid!");
+                rawPlaylist.push({id: videoId, title: 'Memuat...', category: catInput.value});
+                saveData(); renderPlaylist(); urlInput.value = '';
+                alert("Lagu ditambahkan ke kategori " + catInput.value);
             }
         }
 
         function extractID(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
+            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        function savePlaylist() {
-            localStorage.setItem('myCustomPlaylist', JSON.stringify(rawPlaylist));
+        function saveData() { localStorage.setItem('myMusicV3', JSON.stringify(rawPlaylist)); }
+        function removeSong(e, idx) { e.stopPropagation(); rawPlaylist.splice(idx, 1); saveData(); renderPlaylist(); }
+        function clearPlaylist() { if(confirm("Hapus semua lagu dan kategori kustom?")) { localStorage.clear(); location.reload(); } }
+        
+        function exportData() {
+            const backup = { playlist: rawPlaylist, categories: myCategories };
+            prompt("Salin kode backup ini:", btoa(JSON.stringify(backup)));
         }
 
-        function removeSong(e, index) {
-            e.stopPropagation();
-            rawPlaylist.splice(index, 1);
-            savePlaylist();
-            renderPlaylist();
-        }
-
-        function clearPlaylist() {
-            if(confirm("Hapus semua lagu kustom?")) {
-                localStorage.removeItem('myCustomPlaylist');
-                location.reload();
+        function importData() {
+            const code = prompt("Tempel kode backup:");
+            if(code) {
+                try {
+                    const decoded = JSON.parse(atob(code));
+                    rawPlaylist = decoded.playlist;
+                    myCategories = decoded.categories;
+                    saveData(); localStorage.setItem('myCategoriesV3', JSON.stringify(myCategories));
+                    location.reload();
+                } catch(e) { alert("Kode salah!"); }
             }
         }
 
-        // Fungsi player lainnya tetap sama
-        function playTrack(index) { currentTrackIndex = index; loadTrack(); player.playVideo(); }
+        function playTrack(idx) { currentTrackIndex = idx; player.loadVideoById(rawPlaylist[idx].id); player.playVideo(); }
         function togglePlaylist() { document.getElementById('playlist-panel').classList.toggle('open'); }
+
         function onPlayerStateChange(e) {
-            if (e.data === YT.PlayerState.PLAYING) { 
-                document.getElementById('play-btn').innerText = "⏸️"; 
-                document.getElementById('song-title').innerText = player.getVideoData().title;
-                // Update judul lagu di array jika sebelumnya masih "Memuat..."
-                if(rawPlaylist[currentTrackIndex].title.includes("Memuat")) {
-                    rawPlaylist[currentTrackIndex].title = player.getVideoData().title;
-                    savePlaylist();
-                    renderPlaylist();
+            if (e.data === YT.PlayerState.PLAYING) {
+                document.getElementById('play-btn').innerText = "⏸️";
+                const title = player.getVideoData().title;
+                document.getElementById('song-title').innerText = title;
+                if(rawPlaylist[currentTrackIndex].title === "Memuat...") {
+                    rawPlaylist[currentTrackIndex].title = title; saveData(); renderPlaylist();
                 }
             } else { document.getElementById('play-btn').innerText = "▶️"; }
-            if (e.data === YT.PlayerState.ENDED) { (repeatMode === 2) ? player.playVideo() : nextVideo(); }
+            if (e.data === YT.PlayerState.ENDED) nextVideo();
         }
+
         function playPause() { player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
-        function nextVideo() { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; loadTrack(); }
-        function prevVideo() { currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length; loadTrack(); }
-        function loadTrack() { player.loadVideoById(rawPlaylist[currentTrackIndex].id); updateUI(); }
+        function nextVideo() { currentTrackIndex = (currentTrackIndex + 1) % rawPlaylist.length; playTrack(currentTrackIndex); }
+        function prevVideo() { currentTrackIndex = (currentTrackIndex - 1 + rawPlaylist.length) % rawPlaylist.length; playTrack(currentTrackIndex); }
         function updateProgress() {
             if (player && player.getCurrentTime) {
                 const cur = player.getCurrentTime(), dur = player.getDuration();
@@ -198,10 +272,7 @@
         }
         function formatTime(t) { const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
         function seek(e) { const p = e.offsetX / e.currentTarget.offsetWidth; player.seekTo(player.getDuration() * p); }
-        function updateUI() { 
-            document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${rawPlaylist[currentTrackIndex].id}/hqdefault.jpg`; 
-            renderPlaylist();
-        }
+        function updateUI() { document.getElementById('thumbnail').src = `https://img.youtube.com/vi/${rawPlaylist[currentTrackIndex].id}/hqdefault.jpg`; }
     </script>
 </body>
 </html>
